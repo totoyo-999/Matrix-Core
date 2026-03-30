@@ -910,7 +910,6 @@ install_singbox() {
 
 # ===== systemd =====
 write_systemd(){ cat > "/etc/systemd/system/${SYSTEMD_SERVICE}" <<EOF
-    fix_dns
 [Unit]
 Description=Sing-Box (Native 18 nodes)
 After=network-online.target warp-svc.service
@@ -1213,7 +1212,6 @@ deploy_native(){
   info "写入并启用 systemd 服务 ..."
   write_systemd
     fix_dns
-  systemctl restart "${SYSTEMD_SERVICE}" >/dev/null 2>&1 || true
   open_firewall
   echo; echo -e "${C_BOLD}${C_GREEN}★ 部署完成（18 节点）${C_RESET}"; echo
   # 打印链接并直接退出
@@ -1230,6 +1228,7 @@ ensure_installed_or_hint(){
 }
 
 # ===== 菜单 =====
+# DNS 兼容性修复
 menu(){
   banner
   read -rp "选择: " op || true
@@ -1243,7 +1242,6 @@ menu(){
   write_config               || { echo "[ERR] 生成配置失败"; }
   write_systemd              || true
     fix_dns
-  open_firewall              || true
   systemctl restart "${SYSTEMD_SERVICE}" || true
   set -e                                            # ← 恢复严格模式
   print_links_grouped
