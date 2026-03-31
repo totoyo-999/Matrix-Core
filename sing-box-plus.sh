@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 #  Sing-Box-Plus 管理脚本（18 节点：直连 9 + WARP 9）
-#  Version: v3.9.9
+#  Version: v4.0.0
 #  author：5090_Top_System_Architect_totoyo-999
 #  Repo: https://github.com/totoyo-999/Sing-Box-Plus
 # ============================================================
@@ -286,7 +286,7 @@ ENABLE_TUIC=${ENABLE_TUIC:-true}
 
 # 常量
 SCRIPT_NAME="Sing-Box-Plus 管理脚本"
-SCRIPT_VERSION="v3.9.9"
+SCRIPT_VERSION="v4.0.0"
 REALITY_SERVER=${REALITY_SERVER:-www.microsoft.com}
 REALITY_SERVER_PORT=${REALITY_SERVER_PORT:-443}
 GRPC_SERVICE=${GRPC_SERVICE:-grpc}
@@ -954,6 +954,15 @@ write_config(){
   --argjson PW4 "$PORT_HY2_W" --argjson PW5 "$PORT_VMESS_WS_W" --argjson PW6 "$PORT_HY2_OBFS_W" \
   --argjson PW7 "$PORT_SS2022_W" --argjson PW8 "$PORT_SS_W" --argjson PW9 "$PORT_TUIC_W" \
   --arg ENABLE_WARP "$ENABLE_WARP" \
+  --arg EN_VR   "${ENABLE_VLESS_REALITY:-true}" \
+  --arg EN_VG   "${ENABLE_VLESS_GRPCR:-true}" \
+  --arg EN_TR   "${ENABLE_TROJAN_REALITY:-true}" \
+  --arg EN_HY2  "${ENABLE_HYSTERIA2:-true}" \
+  --arg EN_VM   "${ENABLE_VMESS_WS:-true}" \
+  --arg EN_HO   "${ENABLE_HY2_OBFS:-true}" \
+  --arg EN_SS2  "${ENABLE_SS2022:-true}" \
+  --arg EN_SS   "${ENABLE_SS:-true}" \
+  --arg EN_TU   "${ENABLE_TUIC:-true}" \
   --arg WPRIV "${WARP_PRIVATE_KEY:-}" --arg WPPUB "${WARP_PEER_PUBLIC_KEY:-}" \
   --arg WHOST "${WARP_ENDPOINT_HOST:-}" --argjson WPORT "${WARP_ENDPOINT_PORT:-0}" \
   --arg W4 "${WARP_ADDRESS_V4:-}" --arg W6 "${WARP_ADDRESS_V6:-}" \
@@ -977,25 +986,25 @@ write_config(){
     log:{level:"info", timestamp:true},
     dns:{ servers:[ {tag:"dns-remote", address:"https://1.1.1.1/dns-query", detour:"direct"}, {address:"tls://dns.google", detour:"direct"} ], strategy:"prefer_ipv4" },
     inbounds:[
-      (inbound_vless_flow($P1) + {tag:"vless-reality"}),
-      (inbound_vless($P2) + {tag:"vless-grpcr", transport:{type:"grpc", service_name:$GRPC}}),
-      (inbound_trojan($P3) + {tag:"trojan-reality"}),
-      (inbound_hy2($P4) + {tag:"hy2"}),
-      (inbound_vmess_ws($P5) + {tag:"vmess-ws"}),
-      (inbound_hy2_obfs($P6) + {tag:"hy2-obfs"}),
-      (inbound_ss2022($P7) + {tag:"ss2022"}),
-      (inbound_ss($P8) + {tag:"ss"}),
-      (inbound_tuic($P9) + {tag:"tuic-v5"}),
+      (if $EN_VR  =="true" then [(inbound_vless_flow($P1) + {tag:"vless-reality"})]    else [] end)[],
+      (if $EN_VG  =="true" then [(inbound_vless($P2) + {tag:"vless-grpcr", transport:{type:"grpc", service_name:$GRPC}})] else [] end)[],
+      (if $EN_TR  =="true" then [(inbound_trojan($P3) + {tag:"trojan-reality"})]       else [] end)[],
+      (if $EN_HY2 =="true" then [(inbound_hy2($P4) + {tag:"hy2"})]                    else [] end)[],
+      (if $EN_VM  =="true" then [(inbound_vmess_ws($P5) + {tag:"vmess-ws"})]           else [] end)[],
+      (if $EN_HO  =="true" then [(inbound_hy2_obfs($P6) + {tag:"hy2-obfs"})]          else [] end)[],
+      (if $EN_SS2 =="true" then [(inbound_ss2022($P7) + {tag:"ss2022"})]               else [] end)[],
+      (if $EN_SS  =="true" then [(inbound_ss($P8) + {tag:"ss"})]                       else [] end)[],
+      (if $EN_TU  =="true" then [(inbound_tuic($P9) + {tag:"tuic-v5"})]               else [] end)[],
 
-      (inbound_vless_flow($PW1) + {tag:"vless-reality-warp"}),
-      (inbound_vless($PW2) + {tag:"vless-grpcr-warp", transport:{type:"grpc", service_name:$GRPC}}),
-      (inbound_trojan($PW3) + {tag:"trojan-reality-warp"}),
-      (inbound_hy2($PW4) + {tag:"hy2-warp"}),
-      (inbound_vmess_ws($PW5) + {tag:"vmess-ws-warp"}),
-      (inbound_hy2_obfs($PW6) + {tag:"hy2-obfs-warp"}),
-      (inbound_ss2022($PW7) + {tag:"ss2022-warp"}),
-      (inbound_ss($PW8) + {tag:"ss-warp"}),
-      (inbound_tuic($PW9) + {tag:"tuic-v5-warp"})
+      (if $ENABLE_WARP=="true" and $EN_VR  =="true" then [(inbound_vless_flow($PW1) + {tag:"vless-reality-warp"})]    else [] end)[],
+      (if $ENABLE_WARP=="true" and $EN_VG  =="true" then [(inbound_vless($PW2) + {tag:"vless-grpcr-warp", transport:{type:"grpc", service_name:$GRPC}})] else [] end)[],
+      (if $ENABLE_WARP=="true" and $EN_TR  =="true" then [(inbound_trojan($PW3) + {tag:"trojan-reality-warp"})]       else [] end)[],
+      (if $ENABLE_WARP=="true" and $EN_HY2 =="true" then [(inbound_hy2($PW4) + {tag:"hy2-warp"})]                    else [] end)[],
+      (if $ENABLE_WARP=="true" and $EN_VM  =="true" then [(inbound_vmess_ws($PW5) + {tag:"vmess-ws-warp"})]           else [] end)[],
+      (if $ENABLE_WARP=="true" and $EN_HO  =="true" then [(inbound_hy2_obfs($PW6) + {tag:"hy2-obfs-warp"})]          else [] end)[],
+      (if $ENABLE_WARP=="true" and $EN_SS2 =="true" then [(inbound_ss2022($PW7) + {tag:"ss2022-warp"})]               else [] end)[],
+      (if $ENABLE_WARP=="true" and $EN_SS  =="true" then [(inbound_ss($PW8) + {tag:"ss-warp"})]                       else [] end)[],
+      (if $ENABLE_WARP=="true" and $EN_TU  =="true" then [(inbound_tuic($PW9) + {tag:"tuic-v5-warp"})]               else [] end)[]
     ],
     outbounds: (
       if $ENABLE_WARP=="true" then
@@ -1007,7 +1016,18 @@ write_config(){
     route: (
       if $ENABLE_WARP=="true" then
         { default_domain_resolver:"dns-remote", rules:[
-            { inbound: ["vless-reality-warp","vless-grpcr-warp","trojan-reality-warp","hy2-warp","vmess-ws-warp","hy2-obfs-warp","ss2022-warp","ss-warp","tuic-v5-warp"], outbound:"warp" }
+            { inbound: (
+                [ (if $EN_VR =="true" then "vless-reality-warp"  else null end),
+                  (if $EN_VG =="true" then "vless-grpcr-warp"    else null end),
+                  (if $EN_TR =="true" then "trojan-reality-warp"  else null end),
+                  (if $EN_HY2=="true" then "hy2-warp"            else null end),
+                  (if $EN_VM =="true" then "vmess-ws-warp"        else null end),
+                  (if $EN_HO =="true" then "hy2-obfs-warp"       else null end),
+                  (if $EN_SS2=="true" then "ss2022-warp"          else null end),
+                  (if $EN_SS =="true" then "ss-warp"              else null end),
+                  (if $EN_TU =="true" then "tuic-v5-warp"         else null end)
+                ] | [.[] | select(. != null)]
+              ), outbound:"warp" }
           ],
           final:"direct"
         }
@@ -1017,6 +1037,99 @@ write_config(){
     )
   }' > "$CONF_JSON"
   save_env
+}
+
+# ===== 协议开关管理 =====
+manage_protos(){
+  load_env || true; load_ports || true
+
+  # 默认全开
+  : "${ENABLE_VLESS_REALITY:=true}"
+  : "${ENABLE_VLESS_GRPCR:=true}"
+  : "${ENABLE_TROJAN_REALITY:=true}"
+  : "${ENABLE_HYSTERIA2:=true}"
+  : "${ENABLE_VMESS_WS:=true}"
+  : "${ENABLE_HY2_OBFS:=true}"
+  : "${ENABLE_SS2022:=true}"
+  : "${ENABLE_SS:=true}"
+  : "${ENABLE_TUIC:=true}"
+
+  local names=(
+    "vless-reality"
+    "vless-grpcr"
+    "trojan-reality"
+    "hysteria2"
+    "vmess-ws"
+    "hy2-obfs"
+    "ss2022"
+    "ss"
+    "tuic-v5"
+  )
+  local vars=(
+    ENABLE_VLESS_REALITY
+    ENABLE_VLESS_GRPCR
+    ENABLE_TROJAN_REALITY
+    ENABLE_HYSTERIA2
+    ENABLE_VMESS_WS
+    ENABLE_HY2_OBFS
+    ENABLE_SS2022
+    ENABLE_SS
+    ENABLE_TUIC
+  )
+
+  while true; do
+    clear
+    echo -e "\n  ${C_BLUE}=== 节点开关管理（直连/WARP 同步切换）===${C_RESET}\n"
+    local i
+    for i in "${!names[@]}"; do
+      local varname="${vars[$i]}"
+      local val="${!varname}"
+      if [[ "$val" == "true" ]]; then
+        echo -e "  ${C_GREEN}[$((i+1))] [ON] ${C_RESET}${names[$i]}"
+      else
+        echo -e "  ${C_RED}[$((i+1))] [OFF]${C_RESET}${names[$i]}"
+      fi
+    done
+    echo ""
+    echo -e "  ${C_BLUE}[a]${C_RESET} 全部开启   ${C_RED}[x]${C_RESET} 全部关闭"
+    echo -e "  ${C_GREEN}[s]${C_RESET} 保存并重启服务   ${C_RED}[0]${C_RESET} 放弃退出"
+    echo ""
+    read -rp "  输入编号切换（多个用空格，如: 1 3 5）: " input || true
+
+    case "${input:-}" in
+      0) return ;;
+      a)
+        for v in "${vars[@]}"; do eval "$v=true"; done
+        echo -e "  ${C_GREEN}全部已开启${C_RESET}"
+        ;;
+      x)
+        for v in "${vars[@]}"; do eval "$v=false"; done
+        echo -e "  ${C_RED}全部已关闭（至少保留 1 个才能正常运行）${C_RESET}"
+        ;;
+      s)
+        save_env
+        echo -e "\n  ${C_BLUE}[信息] 正在重写配置并重启服务...${C_RESET}"
+        write_config || { echo "[ERR] 生成配置失败"; read -rp "回车返回..." _ || true; return; }
+        systemctl restart "${SYSTEMD_SERVICE}" 2>/dev/null || true
+        echo -e "  ${C_GREEN}完成！服务已重启。${C_RESET}"
+        sleep 1
+        return
+        ;;
+      *)
+        for num in $input; do
+          if [[ "$num" =~ ^[0-9]+$ ]] && (( num >= 1 && num <= ${#vars[@]} )); then
+            local idx=$(( num - 1 ))
+            local vname="${vars[$idx]}"
+            if [[ "${!vname}" == "true" ]]; then
+              eval "$vname=false"
+            else
+              eval "$vname=true"
+            fi
+          fi
+        done
+        ;;
+    esac
+  done
 }
 
 # ===== 防火墙 =====
@@ -1161,7 +1274,15 @@ banner(){
   echo -e "  ${C_GREEN}3)${C_RESET} 重启服务"
   echo -e "  ${C_GREEN}4)${C_RESET} 一键更换所有端口"
   echo -e "  ${C_GREEN}5)${C_RESET} 一键开启 BBR"
+  echo -e "  ${C_YELLOW}7)${C_RESET} 节点开关管理"
   echo -e "  ${C_RED}8)${C_RESET} 卸载"
+  hr
+  echo -e "  ${C_CYAN}9)${C_RESET}  节点测速"
+  echo -e "  ${C_CYAN}10)${C_RESET} 订阅链接生成"
+  echo -e "  ${C_CYAN}11)${C_RESET} 配置备份"
+  echo -e "  ${C_CYAN}12)${C_RESET} 配置恢复"
+  echo -e "  ${C_CYAN}13)${C_RESET} 实时日志"
+  hr
   echo -e "  ${C_RED}0)${C_RESET} 退出"
   hr
 }
@@ -1170,6 +1291,269 @@ banner(){
 restart_service(){
   systemctl restart "${SYSTEMD_SERVICE}" || die "重启失败"
   systemctl --no-pager status "${SYSTEMD_SERVICE}" | sed -n '1,6p' || true
+}
+
+# ===== 节点测速 =====
+speed_test(){
+  ensure_installed_or_hint || return 0
+  load_ports; load_env; load_creds
+  local ip=$(get_ip4)
+  echo -e "\n${C_CYAN}=== 节点延迟测试 (TCP Ping) ===${C_RESET}"
+  echo -e "服务器IP: ${ip}\n"
+  
+  # 安装 tcping 如果不存在
+  if ! command -v tcping >/dev/null 2>&1; then
+    info "正在安装 tcping..."
+    if command -v apt-get >/dev/null 2>&1; then
+      apt-get update -y >/dev/null 2>&1 && apt-get install -y tcping >/dev/null 2>&1 || true
+    elif command -v yum >/dev/null 2>&1 || command -v dnf >/dev/null 2>&1; then
+      local tmp=$(mktemp -d)
+      curl -fsSL -o "$tmp/tcping" https://github.com/pouriyajamshidi/tcping/releases/latest/download/tcping-linux-amd64 2>/dev/null || true
+      if [[ -f "$tmp/tcping" ]]; then
+        chmod +x "$tmp/tcping"
+        mv "$tmp/tcping" /usr/local/bin/tcping
+      fi
+      rm -rf "$tmp"
+    fi
+  fi
+  
+  local has_tcping=false
+  command -v tcping >/dev/null 2>&1 && has_tcpin=true
+  
+  test_port(){
+    local name="$1" port="$2"
+    if [[ -z "$port" ]]; then
+      echo -e "${C_DIM}${name}: 未启用${C_RESET}"
+      return
+    fi
+    
+    if [[ "$has_tcping" == "true" ]]; then
+      local result=$(tcping -c 3 -t 3 "$ip" "$port" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+ms' | head -1)
+      if [[ -n "$result" ]]; then
+        echo -e "${C_GREEN}${name}${C_RESET} (${port}): ${result} ✓"
+      else
+        echo -e "${C_RED}${name}${C_RESET} (${port}): 超时 ✗"
+      fi
+    else
+      if nc -z -w 3 "$ip" "$port" 2>/dev/null; then
+        echo -e "${C_GREEN}${name}${C_RESET} (${port}): 连通 ✓"
+      else
+        echo -e "${C_RED}${name}${C_RESET} (${port}): 不通 ✗"
+      fi
+    fi
+  }
+  
+  echo -e "${C_BOLD}【直连节点】${C_RESET}"
+  [[ "${ENABLE_VLESS_REALITY:-true}" == "true" ]] && test_port "vless-reality" "$PORT_VLESSR"
+  [[ "${ENABLE_VLESS_GRPCR:-true}" == "true" ]] && test_port "vless-grpcr" "$PORT_VLESS_GRPCR"
+  [[ "${ENABLE_TROJAN_REALITY:-true}" == "true" ]] && test_port "trojan-reality" "$PORT_TROJANR"
+  [[ "${ENABLE_HYSTERIA2:-true}" == "true" ]] && test_port "hysteria2" "$PORT_HY2"
+  [[ "${ENABLE_VMESS_WS:-true}" == "true" ]] && test_port "vmess-ws" "$PORT_VMESS_WS"
+  [[ "${ENABLE_HY2_OBFS:-true}" == "true" ]] && test_port "hy2-obfs" "$PORT_HY2_OBFS"
+  [[ "${ENABLE_SS2022:-true}" == "true" ]] && test_port "ss2022" "$PORT_SS2022"
+  [[ "${ENABLE_SS:-true}" == "true" ]] && test_port "ss" "$PORT_SS"
+  [[ "${ENABLE_TUIC:-true}" == "true" ]] && test_port "tuic-v5" "$PORT_TUIC"
+  
+  if [[ "${ENABLE_WARP:-true}" == "true" ]]; then
+    echo -e "\n${C_BOLD}【WARP 节点】${C_RESET}"
+    [[ "${ENABLE_VLESS_REALITY:-true}" == "true" ]] && test_port "vless-reality-warp" "$PORT_VLESSR_W"
+    [[ "${ENABLE_VLESS_GRPCR:-true}" == "true" ]] && test_port "vless-grpcr-warp" "$PORT_VLESS_GRPCR_W"
+    [[ "${ENABLE_TROJAN_REALITY:-true}" == "true" ]] && test_port "trojan-reality-warp" "$PORT_TROJANR_W"
+    [[ "${ENABLE_HYSTERIA2:-true}" == "true" ]] && test_port "hysteria2-warp" "$PORT_HY2_W"
+    [[ "${ENABLE_VMESS_WS:-true}" == "true" ]] && test_port "vmess-ws-warp" "$PORT_VMESS_WS_W"
+    [[ "${ENABLE_HY2_OBFS:-true}" == "true" ]] && test_port "hy2-obfs-warp" "$PORT_HY2_OBFS_W"
+    [[ "${ENABLE_SS2022:-true}" == "true" ]] && test_port "ss2022-warp" "$PORT_SS2022_W"
+    [[ "${ENABLE_SS:-true}" == "true" ]] && test_port "ss-warp" "$PORT_SS_W"
+    [[ "${ENABLE_TUIC:-true}" == "true" ]] && test_port "tuic-v5-warp" "$PORT_TUIC_W"
+  fi
+  
+  echo ""
+  read -rp "回车返回..." _ || true
+}
+
+# ===== 订阅链接生成 =====
+gen_subscription(){
+  ensure_installed_or_hint || return 0
+  load_env; load_creds; load_ports
+  local ip=$(get_ip4)
+  local host=$(fmt_host_for_uri "$ip")
+  
+  echo -e "\n${C_CYAN}=== 生成订阅链接 ===${C_RESET}\n"
+  
+  local links=""
+  
+  add_link(){
+    local link="$1"
+    if [[ -n "$links" ]]; then
+      links="${links}\n${link}"
+    else
+      links="${link}"
+    fi
+  }
+  
+  # 直连节点 (9个，不含anytls)
+  if [[ "${ENABLE_VLESS_REALITY:-true}" == "true" ]]; then
+    add_link "vless://${UUID}@${host}:${PORT_VLESSR}?encryption=none&flow=xtls-rprx-vision&security=reality&sni=${REALITY_SERVER}&fp=chrome&pbk=${REALITY_PUB}&sid=${REALITY_SID}&type=tcp#vless-reality"
+  fi
+  if [[ "${ENABLE_VLESS_GRPCR:-true}" == "true" ]]; then
+    add_link "vless://${UUID}@${host}:${PORT_VLESS_GRPCR}?encryption=none&security=reality&sni=${REALITY_SERVER}&fp=chrome&pbk=${REALITY_PUB}&sid=${REALITY_SID}&type=grpc&serviceName=${GRPC_SERVICE}#vless-grpc-reality"
+  fi
+  if [[ "${ENABLE_TROJAN_REALITY:-true}" == "true" ]]; then
+    add_link "trojan://${UUID}@${host}:${PORT_TROJANR}?security=reality&sni=${REALITY_SERVER}&fp=chrome&pbk=${REALITY_PUB}&sid=${REALITY_SID}&type=tcp#trojan-reality"
+  fi
+  if [[ "${ENABLE_HYSTERIA2:-true}" == "true" ]]; then
+    add_link "hy2://$(urlenc "${HY2_PWD}")@${host}:${PORT_HY2}?insecure=1&allowInsecure=1&sni=${REALITY_SERVER}#hysteria2"
+  fi
+  if [[ "${ENABLE_VMESS_WS:-true}" == "true" ]]; then
+    local VMESS_JSON=$(cat <<JSON
+{"v":"2","ps":"vmess-ws","add":"${ip}","port":"${PORT_VMESS_WS}","id":"${UUID}","aid":"0","net":"ws","type":"none","host":"","path":"${VMESS_WS_PATH}","tls":""}
+JSON
+)
+    add_link "vmess://$(printf "%s" "$VMESS_JSON" | b64enc)"
+  fi
+  if [[ "${ENABLE_HY2_OBFS:-true}" == "true" ]]; then
+    add_link "hy2://$(urlenc "${HY2_PWD2}")@${host}:${PORT_HY2_OBFS}?insecure=1&allowInsecure=1&sni=${REALITY_SERVER}&alpn=h3&obfs=salamander&obfs-password=$(urlenc "${HY2_OBFS_PWD}")#hysteria2-obfs"
+  fi
+  if [[ "${ENABLE_SS2022:-true}" == "true" ]]; then
+    add_link "ss://$(printf "%s" "2022-blake3-aes-256-gcm:${SS2022_KEY}" | b64enc)@${host}:${PORT_SS2022}#ss2022"
+  fi
+  if [[ "${ENABLE_SS:-true}" == "true" ]]; then
+    add_link "ss://$(printf "%s" "aes-256-gcm:${SS_PWD}" | b64enc)@${host}:${PORT_SS}#ss"
+  fi
+  if [[ "${ENABLE_TUIC:-true}" == "true" ]]; then
+    add_link "tuic://${UUID}:$(urlenc "${UUID}")@${host}:${PORT_TUIC}?congestion_control=bbr&alpn=h3&insecure=1&allowInsecure=1&sni=${REALITY_SERVER}#tuic-v5"
+  fi
+  
+  # WARP 节点
+  if [[ "${ENABLE_WARP:-true}" == "true" ]]; then
+    if [[ "${ENABLE_VLESS_REALITY:-true}" == "true" ]]; then
+      add_link "vless://${UUID}@${host}:${PORT_VLESSR_W}?encryption=none&flow=xtls-rprx-vision&security=reality&sni=${REALITY_SERVER}&fp=chrome&pbk=${REALITY_PUB}&sid=${REALITY_SID}&type=tcp#vless-reality-warp"
+    fi
+    if [[ "${ENABLE_VLESS_GRPCR:-true}" == "true" ]]; then
+      add_link "vless://${UUID}@${host}:${PORT_VLESS_GRPCR_W}?encryption=none&security=reality&sni=${REALITY_SERVER}&fp=chrome&pbk=${REALITY_PUB}&sid=${REALITY_SID}&type=grpc&serviceName=${GRPC_SERVICE}#vless-grpc-reality-warp"
+    fi
+    if [[ "${ENABLE_TROJAN_REALITY:-true}" == "true" ]]; then
+      add_link "trojan://${UUID}@${host}:${PORT_TROJANR_W}?security=reality&sni=${REALITY_SERVER}&fp=chrome&pbk=${REALITY_PUB}&sid=${REALITY_SID}&type=tcp#trojan-reality-warp"
+    fi
+    if [[ "${ENABLE_HYSTERIA2:-true}" == "true" ]]; then
+      add_link "hy2://$(urlenc "${HY2_PWD}")@${host}:${PORT_HY2_W}?insecure=1&allowInsecure=1&sni=${REALITY_SERVER}#hysteria2-warp"
+    fi
+    if [[ "${ENABLE_VMESS_WS:-true}" == "true" ]]; then
+      local VMESS_JSON_W=$(cat <<JSON
+{"v":"2","ps":"vmess-ws-warp","add":"${ip}","port":"${PORT_VMESS_WS_W}","id":"${UUID}","aid":"0","net":"ws","type":"none","host":"","path":"${VMESS_WS_PATH}","tls":""}
+JSON
+)
+      add_link "vmess://$(printf "%s" "$VMESS_JSON_W" | b64enc)"
+    fi
+    if [[ "${ENABLE_HY2_OBFS:-true}" == "true" ]]; then
+      add_link "hy2://$(urlenc "${HY2_PWD2}")@${host}:${PORT_HY2_OBFS_W}?insecure=1&allowInsecure=1&sni=${REALITY_SERVER}&alpn=h3&obfs=salamander&obfs-password=$(urlenc "${HY2_OBFS_PWD}")#hysteria2-obfs-warp"
+    fi
+    if [[ "${ENABLE_SS2022:-true}" == "true" ]]; then
+      add_link "ss://$(printf "%s" "2022-blake3-aes-256-gcm:${SS2022_KEY}" | b64enc)@${host}:${PORT_SS2022_W}#ss2022-warp"
+    fi
+    if [[ "${ENABLE_SS:-true}" == "true" ]]; then
+      add_link "ss://$(printf "%s" "aes-256-gcm:${SS_PWD}" | b64enc)@${host}:${PORT_SS_W}#ss-warp"
+    fi
+    if [[ "${ENABLE_TUIC:-true}" == "true" ]]; then
+      add_link "tuic://${UUID}:$(urlenc "${UUID}")@${host}:${PORT_TUIC_W}?congestion_control=bbr&alpn=h3&insecure=1&allowInsecure=1&sni=${REALITY_SERVER}#tuic-v5-warp"
+    fi
+  fi
+  
+  local sub_b64=$(printf "%b" "$links" | base64 -w 0 2>/dev/null || printf "%b" "$links" | base64)
+  local sub_web="/var/www/html/sub/singbox.txt"
+  
+  # 确保目录存在
+  mkdir -p /var/www/html/sub
+  
+  # 保存到 web 目录
+  echo "$sub_b64" > "$sub_web"
+  local local_ip=$(get_ip4)
+  
+  echo -e "${C_GREEN}订阅链接已生成！${C_RESET}\n"
+  echo -e "${C_BOLD}v2rayN 订阅地址:${C_RESET}"
+  echo -e "${C_YELLOW}  http://${local_ip}/sub/singbox.txt${C_RESET}\n"
+  echo -e "${C_BOLD}节点数量:${C_RESET} $(echo -e "$links" | wc -l)\n"
+  echo -e "${C_YELLOW}提示: 在 v2rayN 中添加订阅 → 填入上面的 URL → 点击更新${C_RESET}"
+  
+  read -rp "\n回车返回..." _ || true
+}
+
+# ===== 配置备份 =====
+backup_config(){
+  ensure_installed_or_hint || return 0
+  local backup_file="/root/sing-box-backup-$(date +%Y%m%d-%H%M%S).tar.gz"
+  
+  echo -e "\n${C_CYAN}=== 配置备份 ===${C_RESET}\n"
+  
+  if tar -czf "$backup_file" -C "$(dirname "$SB_DIR")" "$(basename "$SB_DIR")" 2>/dev/null; then
+    echo -e "${C_GREEN}备份成功！${C_RESET}"
+    echo -e "备份文件: ${C_BOLD}${backup_file}${C_RESET}"
+    echo -e "文件大小: $(du -h "$backup_file" | cut -f1)\n"
+    echo -e "${C_YELLOW}提示: 请妥善保管此文件，恢复时需要用到${C_RESET}"
+  else
+    err "备份失败"
+  fi
+  
+  read -rp "\n回车返回..." _ || true
+}
+
+# ===== 配置恢复 =====
+restore_config(){
+  echo -e "\n${C_CYAN}=== 配置恢复 ===${C_RESET}\n"
+  
+  local backups=($(ls -t /root/sing-box-backup-*.tar.gz 2>/dev/null))
+  
+  if [[ ${#backups[@]} -eq 0 ]]; then
+    err "未找到备份文件 (/root/sing-box-backup-*.tar.gz)"
+    read -rp "回车返回..." _ || true
+    return
+  fi
+  
+  echo -e "${C_BOLD}可用备份文件:${C_RESET}"
+  local i
+  for i in "${!backups[@]}"; do
+    echo -e "  [${C_GREEN}$((i+1))${C_RESET}] ${backups[$i]} ($(du -h "${backups[$i]}" | cut -f1))"
+  done
+  echo -e "  [${C_RED}0${C_RESET}] 取消"
+  
+  read -rp "\n选择要恢复的备份: " choice
+  
+  if [[ "$choice" == "0" ]]; then
+    return
+  fi
+  
+  if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#backups[@]} )); then
+    local selected="${backups[$((choice-1))]}"
+    echo -e "\n${C_YELLOW}警告: 恢复将覆盖当前配置！${C_RESET}"
+    read -rp "确认恢复? (y/N): " confirm
+    
+    if [[ "${confirm,,}" == "y" ]]; then
+      systemctl stop "${SYSTEMD_SERVICE}" 2>/dev/null || true
+      rm -rf "$SB_DIR"
+      if tar -xzf "$selected" -C "$(dirname "$SB_DIR")" 2>/dev/null; then
+        systemctl start "${SYSTEMD_SERVICE}" 2>/dev/null || true
+        echo -e "${C_GREEN}恢复成功！服务已重启。${C_RESET}"
+      else
+        err "恢复失败"
+      fi
+    else
+      echo -e "${C_DIM}已取消${C_RESET}"
+    fi
+  else
+    err "无效选择"
+  fi
+  
+  read -rp "\n回车返回..." _ || true
+}
+
+# ===== 实时日志 =====
+view_logs(){
+  ensure_installed_or_hint || return 0
+  echo -e "\n${C_CYAN}=== 实时日志 (按 Ctrl+C 退出) ===${C_RESET}\n"
+  echo -e "${C_DIM}显示最近 50 行日志，并实时更新...${C_RESET}\n"
+  journalctl -u "${SYSTEMD_SERVICE}" -n 50 -f --no-pager || true
+  echo ""
+  read -rp "回车返回..." _ || true
 }
 
 rotate_ports(){
@@ -1253,7 +1637,13 @@ menu(){
     3) if ensure_installed_or_hint; then restart_service; fi; read -rp "回车返回..." _ || true; menu ;;
    4) if ensure_installed_or_hint; then rotate_ports; fi; menu ;;
     5) enable_bbr; read -rp "回车返回..." _ || true; menu ;;
+    7) if ensure_installed_or_hint; then manage_protos; fi; menu ;;
     8) uninstall_all ;; # 直接退出
+    9) if ensure_installed_or_hint; then speed_test; fi; menu ;;
+    10) if ensure_installed_or_hint; then gen_subscription; fi; menu ;;
+    11) if ensure_installed_or_hint; then backup_config; fi; menu ;;
+    12) restore_config; menu ;;
+    13) if ensure_installed_or_hint; then view_logs; fi; menu ;;
     0) exit 0 ;;
     *) menu ;;
   esac
